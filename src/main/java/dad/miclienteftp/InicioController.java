@@ -1,18 +1,13 @@
 package dad.miclienteftp;
 import java.io.IOException;
 import java.net.URL;
-import java.util.Arrays;
+
 import java.util.ResourceBundle;
 
 import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
 
-import javafx.application.Platform;
-import javafx.beans.property.ListProperty;
-import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -76,31 +71,14 @@ public class InicioController implements Initializable {
 	    		// cambiar el directorio actual en el servidor
 	    		cliente.changeWorkingDirectory("/debian/dists");
 	    		
-	    		String directorioActual = cliente.printWorkingDirectory();
-				System.out.println("Directorio actual: " + directorioActual);
-				
-				FTPFile [] ficheros = cliente.listFiles();
-				
-				// recorrer el listado de archivos recuperados
-				System.out.format("+------------------------+%n");
-				System.out.format("| Archivos del servidor: |%n");
-				System.out.format("+------------------------+-----------------+----------------+-----------------+%n");
-				System.out.format("| Nombre                                   | Tamaño (bytes) | Tipo            |%n");
-				System.out.format("+------------------------------------------+----------------+-----------------+%n");
-				Arrays.asList(ficheros)
-				
-					.forEach(fichero -> {
-					    System.out.format("| %-40s | %-14d | %-15s |%n", fichero.getName(), fichero.getSize(), fichero.getType());
-					});
-				System.out.format("+------------------------------------------+----------------+-----------------+%n");
-	    
+	    		App.info("Conexión", "Conexión establecida con éxito.", null);
+		    	stage.close();
 	    	}catch(IOException e) {
 	    	App.error("No se puedo conectar: " + server.getValue());
 	    	throw new RuntimeException(e);
 	    	
 	    	}
-	    	App.info("Conexión", "Conexión establecida con éxito.", null);
-	    	stage.close();
+	    	
 	    }
 
 		@Override

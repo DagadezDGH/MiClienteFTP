@@ -1,5 +1,6 @@
 package dad.miclienteftp;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
@@ -31,11 +32,15 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 public class ClienteController implements Initializable{
-	InicioController controller = new InicioController();
-	
-	private StringProperty ruta = new SimpleStringProperty("/");
+	InicioController controller;
+	FileOutputStream salida;
+	FileInputStream entrada;
+	private StringProperty ruta = new SimpleStringProperty();
 	private ListProperty<Fichero> ficheros = new SimpleListProperty<Fichero>(FXCollections.observableArrayList());
 	private BooleanProperty conectado = new SimpleBooleanProperty();
 	
@@ -75,11 +80,16 @@ public class ClienteController implements Initializable{
     @FXML
     void onConectarAction(ActionEvent event) throws IOException {
 
-    	InicioController controller = new InicioController();
+    	controller = new InicioController();
 		controller.showOnStage(App.getPrimaryStage());
+		controller.cliente.changeWorkingDirectory("/");
+		cargarFicheros();
+
+		}
+
+	private void cargarFicheros() {
 		try {
 			
-            controller.cliente.changeWorkingDirectory("debian/dists");
             ruta.setValue(controller.cliente.printWorkingDirectory());
 
             List<FTPFile> listado = Arrays.asList(controller.cliente.listFiles());
@@ -98,19 +108,33 @@ public class ClienteController implements Initializable{
           
             e.printStackTrace();
         }
-
-		}
+	}
 
     @FXML
     void onDescargarAction(ActionEvent event) throws IOException {
-    	File descarga = new File("welcome.msg");
-		FileOutputStream flujo = new FileOutputStream("welcome.msg");
-		controller.cliente.retrieveFile("welcome.msg", flujo);
-		flujo.flush();
-		flujo.close();
+    	System.out.println(controller.cliente.isConnected());
+    	Fichero seleccionado = clienteTable.getSelectionModel().getSelectedItem();
+    	System.out.println(seleccionado.getNombre());
+    	FileChooser fileChooser = new FileChooser();
+    	fileChooser.setTitle("Guardar");
+    	fileChooser.getExtensionFilters().addAll(new ExtensionFilter("Todos los archivos", "*.*"));
+    	fileChooser.setInitialFileName(seleccionado.getNombre());
+    	File file = fileChooser.showSaveDialog(App.getPrimaryStage());
+    	  if(file != null){
+             SaveFile(seleccionado.getNombre(), file);
+          }
     }
 
-    @FXML
+	public void SaveFile(String nombre, File file) throws IOException {
+    	File descarga = new File(nombre);
+		FileOutputStream flujo = new FileOutputStream(descarga);
+		controller.cliente.retrieveFile(nombre, flujo);
+		flujo.flush();
+		flujo.close();
+		
+	}
+
+	@FXML
     void onDesconectarAction(ActionEvent event){
     	try {
 			controller.cliente.disconnect();
@@ -119,14 +143,40 @@ public class ClienteController implements Initializable{
 			e.printStackTrace();
 		}
     	clienteTable.getItems().clear();
-    	ruta.setValue("/");
+    	ruta.setValue("");
     	App.info("Desconexion", "Desconexión establecida con éxito.", null);
     	
     }
+	@FXML
+	void onTablaMouseClicked(MouseEvent event) {
+	    // si se ha pulsado dos veces y hay un elemento seleccionado en la tabla
+	    if (event.getClickCount() == 2 && clienteTable.getSelectionModel().getSelectedItem() != null) {
+	        // TODO implementar aquí la acción del doble click
+	    	System.out.println("Hay doble click");
+	    	try {
+//	    		if(clienteTable.getSelectionModel().getSelectedItem().getNombre() == "..") {
+//	    			controller.cliente.changeToParentDirectory();
+//	    			cargarFicheros();
+//	    			System.out.println(ruta.getValue());
+//	    		}
+//	    		controller.cliente.changeWorkingDirectory(clienteTable.getSelectionModel().getSelectedItem().getNombre());
+//	    		controller.cliente.changeWorkingDirectory("/"+ ruta.getValue()+"/"+clienteTable.getSelectionModel().getSelectedItem().getNombre()+"/");
+	    		controller.cliente.changeWorkingDirectory(ruta.getValue()+ "/"+clienteTable.getSelectionModel().getSelectedItem().getNombre());
+	    		cargarFicheros();
+	    		System.out.println(ruta.getValue());
+	    		
+	    		
+	    	} catch (IOException e) {
+				
+				e.printStackTrace();
+			}
+	    }	
+	}
+
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-
+		
 		clienteTable.itemsProperty().bind(ficheros);
 		rutaLabel.textProperty().bind(ruta);
 		nombreColumn.setCellValueFactory(v -> v.getValue().nombreProperty());
