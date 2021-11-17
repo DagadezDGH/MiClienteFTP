@@ -1,13 +1,18 @@
 package dad.miclienteftp;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.ResourceBundle;
 
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 import javafx.application.Platform;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -23,6 +28,7 @@ import javafx.stage.Window;
 
 public class InicioController implements Initializable {
 		// instanciar el cliente FTP
+
 		FTPClient cliente = new FTPClient();
 		Stage stage;
 		private StringProperty user = new SimpleStringProperty();
@@ -69,6 +75,24 @@ public class InicioController implements Initializable {
 
 	    		// cambiar el directorio actual en el servidor
 	    		cliente.changeWorkingDirectory("/debian/dists");
+	    		
+	    		String directorioActual = cliente.printWorkingDirectory();
+				System.out.println("Directorio actual: " + directorioActual);
+				
+				FTPFile [] ficheros = cliente.listFiles();
+				
+				// recorrer el listado de archivos recuperados
+				System.out.format("+------------------------+%n");
+				System.out.format("| Archivos del servidor: |%n");
+				System.out.format("+------------------------+-----------------+----------------+-----------------+%n");
+				System.out.format("| Nombre                                   | Tamaño (bytes) | Tipo            |%n");
+				System.out.format("+------------------------------------------+----------------+-----------------+%n");
+				Arrays.asList(ficheros)
+				
+					.forEach(fichero -> {
+					    System.out.format("| %-40s | %-14d | %-15s |%n", fichero.getName(), fichero.getSize(), fichero.getType());
+					});
+				System.out.format("+------------------------------------------+----------------+-----------------+%n");
 	    
 	    	}catch(IOException e) {
 	    	App.error("No se puedo conectar: " + server.getValue());
@@ -76,11 +100,12 @@ public class InicioController implements Initializable {
 	    	
 	    	}
 	    	App.info("Conexión", "Conexión establecida con éxito.", null);
+	    	stage.close();
 	    }
 
 		@Override
 		public void initialize(URL location, ResourceBundle resources) {
-			// TODO Auto-generated method stub
+			
 			servidorText.textProperty().bindBidirectional(server);
 			puertoText.textProperty().bindBidirectional(puerto);
 			passwdText.textProperty().bindBidirectional(passwd);
@@ -88,7 +113,7 @@ public class InicioController implements Initializable {
 		}
 
 		public GridPane getView() {
-			// TODO Auto-generated method stub
+			
 			return view;
 		}
 		
@@ -105,7 +130,7 @@ public class InicioController implements Initializable {
 		}
 
 		public void showOnStage(Window ventana) {
-			// TODO Auto-generated method stub
+			
 			stage = new Stage();
 			stage.getIcons();
 			stage.setTitle("Iniciar Conexión");
