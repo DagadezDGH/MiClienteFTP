@@ -6,6 +6,10 @@ import java.util.ResourceBundle;
 
 import org.apache.commons.net.ftp.FTPClient;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.event.ActionEvent;
@@ -30,6 +34,8 @@ public class InicioController implements Initializable {
 		private StringProperty passwd = new SimpleStringProperty();
 		private StringProperty server = new SimpleStringProperty();
 		private StringProperty puerto = new SimpleStringProperty();
+		private BooleanProperty conectado = new SimpleBooleanProperty();
+		private ObjectProperty<FTPClient> clientee = new SimpleObjectProperty<>();
 	    
 		
 		@FXML
@@ -67,23 +73,23 @@ public class InicioController implements Initializable {
 
 	    		// iniciar sesión anónimo (login)
 	    		cliente.login(user.getValue(),passwd.getValue());
-
-	    		// cambiar el directorio actual en el servidor
-	    		cliente.changeWorkingDirectory("/debian/dists");
+	    		
+	    		
 	    		
 	    		App.info("Conexión", "Conexión establecida con éxito.", null);
 		    	stage.close();
 	    	}catch(IOException e) {
 	    	App.error("No se puedo conectar: " + server.getValue());
+
 	    	throw new RuntimeException(e);
 	    	
 	    	}
-	    	
+	    	conectado.setValue(true);
 	    }
 
 		@Override
 		public void initialize(URL location, ResourceBundle resources) {
-			
+			conectado.setValue(false);
 			servidorText.textProperty().bindBidirectional(server);
 			puertoText.textProperty().bindBidirectional(puerto);
 			passwdText.textProperty().bindBidirectional(passwd);
@@ -118,4 +124,19 @@ public class InicioController implements Initializable {
 			stage.showAndWait();
 			
 		}
+
+		public final BooleanProperty conectadoProperty() {
+			return this.conectado;
+		}
+		
+
+		public final boolean isConectado() {
+			return this.conectadoProperty().get();
+		}
+		
+
+		public final void setConectado(final boolean conectado) {
+			this.conectadoProperty().set(conectado);
+		}
+		
 }

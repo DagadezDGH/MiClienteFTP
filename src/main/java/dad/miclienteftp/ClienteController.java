@@ -18,6 +18,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -31,13 +32,14 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 public class ClienteController implements Initializable{
-	InicioController controller;
+	InicioController controller= new InicioController();;
 	FileOutputStream salida;
 	FileInputStream entrada;
 	private StringProperty ruta = new SimpleStringProperty();
@@ -80,7 +82,7 @@ public class ClienteController implements Initializable{
     @FXML
     void onConectarAction(ActionEvent event) throws IOException {
 
-    	controller = new InicioController();
+//    	controller = new InicioController();
 		controller.showOnStage(App.getPrimaryStage());
 		controller.cliente.changeWorkingDirectory("/");
 		cargarFicheros();
@@ -113,6 +115,8 @@ public class ClienteController implements Initializable{
     @FXML
     void onDescargarAction(ActionEvent event) throws IOException {
     	System.out.println(controller.cliente.isConnected());
+    	System.out.println(controller.isConectado());
+    	
     	Fichero seleccionado = clienteTable.getSelectionModel().getSelectedItem();
     	System.out.println(seleccionado.getNombre());
     	FileChooser fileChooser = new FileChooser();
@@ -122,6 +126,7 @@ public class ClienteController implements Initializable{
     	File file = fileChooser.showSaveDialog(App.getPrimaryStage());
     	  if(file != null){
              SaveFile(seleccionado.getNombre(), file);
+             App.info("Archivo Guardado","El fichero ha sido descargado", null);
           }
     }
 
@@ -138,11 +143,13 @@ public class ClienteController implements Initializable{
     void onDesconectarAction(ActionEvent event){
     	try {
 			controller.cliente.disconnect();
+			
 		} catch (IOException e) {
 			
 			e.printStackTrace();
 		}
     	clienteTable.getItems().clear();
+    	
     	ruta.setValue("");
     	App.info("Desconexion", "Desconexión establecida con éxito.", null);
     	
@@ -150,10 +157,10 @@ public class ClienteController implements Initializable{
 	@FXML
 	void onTablaMouseClicked(MouseEvent event) {
 	    // si se ha pulsado dos veces y hay un elemento seleccionado en la tabla
-	    if (event.getClickCount() == 2 && clienteTable.getSelectionModel().getSelectedItem() != null) {
-	        // TODO implementar aquí la acción del doble click
-	    	System.out.println("Hay doble click");
-	    	try {
+//	    if (event.getClickCount() == 2 && clienteTable.getSelectionModel().getSelectedItem() != null) {
+//	        // TODO implementar aquí la acción del doble click
+//	    	System.out.println("Hay doble click");
+//	    	try {
 //	    		if(clienteTable.getSelectionModel().getSelectedItem().getNombre() == "..") {
 //	    			controller.cliente.changeToParentDirectory();
 //	    			cargarFicheros();
@@ -161,32 +168,49 @@ public class ClienteController implements Initializable{
 //	    		}
 //	    		controller.cliente.changeWorkingDirectory(clienteTable.getSelectionModel().getSelectedItem().getNombre());
 //	    		controller.cliente.changeWorkingDirectory("/"+ ruta.getValue()+"/"+clienteTable.getSelectionModel().getSelectedItem().getNombre()+"/");
-	    		controller.cliente.changeWorkingDirectory(ruta.getValue()+ "/"+clienteTable.getSelectionModel().getSelectedItem().getNombre());
-	    		cargarFicheros();
-	    		System.out.println(ruta.getValue());
-	    		
-	    		
-	    	} catch (IOException e) {
-				
-				e.printStackTrace();
-			}
-	    }	
+//	    		controller.cliente.changeWorkingDirectory(clienteTable.getSelectionModel().getSelectedItem().getNombre());
+//	    		cargarFicheros();
+//	    		System.out.println(ruta.getValue());
+//	    		
+//	    		
+//	    	} catch (IOException e) {
+//				
+//				e.printStackTrace();
+//			}
+//	    }	
 	}
 
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		
+		//binds
 		clienteTable.itemsProperty().bind(ficheros);
 		rutaLabel.textProperty().bind(ruta);
+		conectado.bindBidirectional(controller.conectadoProperty());
+		
 		nombreColumn.setCellValueFactory(v -> v.getValue().nombreProperty());
 		tamanoColumn.setCellValueFactory(v -> v.getValue().tamanoProperty());
 		tipoColumn.setCellValueFactory(v -> v.getValue().tipoProperty());
-
 		
+		clienteTable.setRowFactory( tv -> {
+		    TableRow<Fichero> row = new TableRow<>();
+		    row.setOnMouseClicked(event -> {
+		        if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+		    		try {
+						controller.cliente.changeWorkingDirectory(row.getItem().getNombre());
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+		    		cargarFicheros();
+		        }
+		    });
+		    return row;
+		});
 		
 		}
 	
+
 	public GridPane getView() {
 		
 		return view;

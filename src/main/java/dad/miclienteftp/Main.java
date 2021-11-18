@@ -7,3 +7,4 @@ public class Main {
 	}
 }
 //       ftp.rediris.es
+//ruta.getValue()+ "/"+
